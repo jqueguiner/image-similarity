@@ -4,7 +4,7 @@ You can build and run the docker using the following process:
 
 Cloning
 ```console
-gti clone https://github.com/jqueguiner/XXXX.git XXXXX
+git clone https://github.com/jqueguiner/XXXX.git XXXXX
 ```
 
 Building Docker

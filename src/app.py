@@ -74,6 +74,9 @@ def process():
 
         return callback, 200
 
+        #callback for detection
+        #json.dumps(results), 200
+
     except:
         traceback.print_exc()
         return {'message': 'input error'}, 400
