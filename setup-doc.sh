@@ -270,6 +270,9 @@ RESPONSE_PROPERTIES=$(echo $RESPONSE_PROPERTIES | sed 's/.$//')
 
 sed -i '' "s!RESPONSE_PROPERTIES!$RESPONSE_PROPERTIES!g" $SWAGGER
 
+python -m json.tool $SWAGGER > $SWAGGER'.tmp' 
+mv $SWAGGER'.tmp' $SWAGGER
+
 CONTENT_TYPE=$(header_to_real $CONTENT_TYPE)
 ACCEPT_TYPE=$(header_to_real $ACCEPT_TYPE)
 
@@ -284,8 +287,6 @@ sed -i '' "s/REPO/$REPO/g" $README
 echo "
 This API use the following Github project : 
 [$REPO_NO_GIT]($REPO_NO_GIT)" > $SOURCE_CODE
-
-
 
 
 dialog --backtitle "Marketplace API service" --title "Fetching license in $REPO_NO_GIT" --clear --msgbox "Next step will fetch the license in repo $REPO_NO_GIT it might take few seconds click ok to continue" 10 80
@@ -309,7 +310,6 @@ if [[ ! LICENSE_URL = "" ]]; then
 	rm $tmp_license_file
 fi
 	
-
 
 LICENSE_OPTIONS=(None "None" \
 		APACHE2 "Apache License 2.0"
