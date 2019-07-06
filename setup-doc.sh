@@ -1,5 +1,4 @@
-dialog --title "Doc Generator" --clear --msgbox "Welcome to the Doc generator" 10 41
-
+current_dir="${PWD##*/}"
 mkdir -p doc
 
 README='doc/README.md'
@@ -10,8 +9,12 @@ LICENCE_CODE='doc/source_code.md'
 cp README_TEMPLATE.md $README
 cp swagger_template.json $SWAGGER
 
-current_dir="${PWD##*/}"
+REPO=$(echo "https://"$(echo $(git remote show origin) | egrep -o "(github\.com..*) URL") | sed "s/com:/com\//g")
 
+REPO=${REPO%????}
+REPO_NO_GIT=${REPO%????}
+
+dialog --title "Doc Generator - $current_dir" --clear --msgbox "Welcome to the Doc generator for $current_dir on repo $REPO_NO_GIT" 10 80
 
 TITLE_OF_THE_SERVICE=""
 SHORT_DESCRIPTION_OF_THE_SERVICE=""
@@ -20,10 +23,8 @@ API_RESTPOINT_OPERATION="detect"
 NB_INPUT_FIELDS=1
 NB_OUTPUT_FIELDS=1
 
-
 # open fd
 exec 3>&1
-
 VALUES=$(dialog \
 		--ok-label "Submit" \
 		--backtitle "Marketplace API service" \
@@ -37,8 +38,6 @@ VALUES=$(dialog \
 		"number of input fields:"     5 1	"$NB_INPUT_FIELDS" 	5 25 80 0 \
 		"number of output fields:"     6 1	"$NB_OUTPUT_FIELDS" 	6 25 80 0 \
 		2>&1 1>&3)
-
-
 # close fd
 exec 3>&-
 
@@ -74,6 +73,35 @@ HEADER_TYPE_OPTIONS=(application_json "application/json" \
 		audio_xwave "audio/x-wav" \
 		video_gpp "video/3gpp" \
 		video_mp4 "video/mp4")
+
+
+
+
+header_to_real(){
+	HEADER_TYPE=$1
+	case $HEADER_TYPE in
+	  [application_json]*) HEADER_TYPE="application\/json";;
+	  [application_xml]*) HEADER_TYPE="application\/xml";;
+	  [text_html]*) HEADER_TYPE="text\/html";;
+	  [text_csv]*) HEADER_TYPE="text\/csv";;
+	  [text_plain]*) HEADER_TYPE="text\/plain";;
+	  [image]*) HEADER_TYPE="image\/\*";;
+	  [image_bmp]*) HEADER_TYPE="image\/bmp";;
+	  [image_gif]*) HEADER_TYPE="image\/gif";;
+	  [image_jpeg]*) HEADER_TYPE="image\/jpeg";;
+	  [image_png]*) HEADER_TYPE="image\/png ";;
+	  [audio_gpp]*) HEADER_TYPE="audio\/3gpp";;
+	  [audio_midi]*) HEADER_TYPE="audio\/midi";;
+	  [audio_mpeg]*) HEADER_TYPE="audio\/mpeg";;
+	  [audio_mp4]*) HEADER_TYPE="audio\/mp4";;
+	  [audio_wave]*) HEADER_TYPE="audio\/wav";;
+	  [audio_xwave]*) HEADER_TYPE="audio\/x-wav";;
+	  [video_gpp]*) HEADER_TYPE="video\/3gpp";;
+	  [video_mp4]*) HEADER_TYPE="video\/mp4";;
+	esac
+	echo $HEADER_TYPE
+}
+
 
 exec 3>&1
 ACCEPT_TYPE=$(dialog \
@@ -138,7 +166,6 @@ for (( i = 1; i <= $NB_INPUT_FIELDS; ++i )); do
 			"FIELD_DESCRIPTION:"    2 1	"$FIELD_DESCRIPTION"  	2 22 80 0 \
 			"FIELD_EXAMPLE:"    3 1	"$FIELD_EXAMPLE"  	3 22 80 0 \
 			2>&1 1>&3)
-
 	# close fd
 	exec 3>&-
 
@@ -152,7 +179,6 @@ for (( i = 1; i <= $NB_INPUT_FIELDS; ++i )); do
 			15 80 15 \
 			"${FIELD_TYPE_OPTIONS[@]}" \
 			2>&1 1>&3)
-	
 	# close fd
 	exec 3>&-
 
@@ -183,7 +209,6 @@ CURL_DATA="{$CURL_DATA}"
 
 SCHEMA='"Body":{"type":"object","required":['$REQUIRED'],"properties":{'$PROPERTIES'}'
 SCHEMA=$(printf "%q" $SCHEMA | sed 's/\//\\\//g')
-echo $SCHEMA
 
 sed -i '' "s/SCHEMA/$SCHEMA/g" $SWAGGER
 
@@ -211,7 +236,6 @@ for (( i = 1; i <= $NB_OUTPUT_FIELDS; ++i )); do
 			"FIELD_DESCRIPTION:"    2 1	"$FIELD_DESCRIPTION"  	2 22 80 0 \
 			"FIELD_EXAMPLE:"    3 1	"$FIELD_EXAMPLE"  	3 22 80 0 \
 			2>&1 1>&3)
-
 	# close fd
 	exec 3>&-
 
@@ -224,7 +248,6 @@ for (( i = 1; i <= $NB_OUTPUT_FIELDS; ++i )); do
 			15 80 15 \
 			"${FIELD_TYPE_OPTIONS[@]}" \
 			2>&1 1>&3)
-	
 	# close fd
 	exec 3>&-
 
@@ -239,67 +262,29 @@ for (( i = 1; i <= $NB_OUTPUT_FIELDS; ++i )); do
 	  [integer_int64]*) FIELD_FORMAT='"format":"int64",'; FIELD_TYPE="integer";;
 	esac
 
-	RESPONSE_PROPERTIES=$RESPONSE_PROPERTIES'"'$FIELD_KEY'":{"type":"'$FIELD_TYPE'",'$FIELD_FORMAT'"description":"'$FIELD_DESCRIPTION'","example":"'$FIELD_EXAMPLE'"},'
-	echo $RESPONSE_PROPERTIES
+	RESPONSE_PROPERTIES=$RESPONSE_PROPERTIES'"'$FIELD_KEY'":{"type":"'$FIELD_TYPE'",'$FIELD_FORMAT'"description":"'$FIELD_DESCRIPTION'","example":"'$FIELD_EXAMPLE'"},'	
 
 done
 
 #trim last comma
-PROPERTIES=${PROPERTIES%?}
+RESPONSE_PROPERTIES=${RESPONSE_PROPERTIES%?}
 
 RESPONSE_PROPERTIES=$(printf "%q" $RESPONSE_PROPERTIES | sed 's/\//\\\//g')
 
 sed -i '' "s/RESPONSE_PROPERTIES/$RESPONSE_PROPERTIES/g" $SWAGGER
 
-
-header_to_real(){
-	HEADER_TYPE=$1
-	case $HEADER_TYPE in
-	  [application_json]*) HEADER_TYPE="application\/json";;
-	  [application_xml]*) HEADER_TYPE="application\/xml";;
-	  [text_html]*) HEADER_TYPE="text\/html";;
-	  [text_csv]*) HEADER_TYPE="text\/csv";;
-	  [text_plain]*) HEADER_TYPE="text\/plain";;
-	  [image]*) HEADER_TYPE="image\/\*";;
-	  [image_bmp]*) HEADER_TYPE="image\/bmp";;
-	  [image_gif]*) HEADER_TYPE="image\/gif";;
-	  [image_jpeg]*) HEADER_TYPE="image\/jpeg";;
-	  [image_png]*) HEADER_TYPE="image\/png ";;
-	  [audio_gpp]*) HEADER_TYPE="audio\/3gpp";;
-	  [audio_midi]*) HEADER_TYPE="audio\/midi";;
-	  [audio_mpeg]*) HEADER_TYPE="audio\/mpeg";;
-	  [audio_mp4]*) HEADER_TYPE="audio\/mp4";;
-	  [audio_wave]*) HEADER_TYPE="audio\/wav";;
-	  [audio_xwave]*) HEADER_TYPE="audio\/x-wav";;
-	  [video_gpp]*) HEADER_TYPE="video\/3gpp";;
-	  [video_mp4]*) HEADER_TYPE="video\/mp4";;
-	esac
-	echo $HEADER_TYPE
-}
-
 CONTENT_TYPE=$(header_to_real $CONTENT_TYPE)
 ACCEPT_TYPE=$(header_to_real $ACCEPT_TYPE)
-echo $CONTENT_TYPE
-echo $ACCEPT_TYPE
-echo $CURL_DATA
+
 CALL="curl -X POST \"http:\\/\\/MY_SUPER_API_IP:5000\\/$API_RESTPOINT_OPERATION\" -H \"accept: $ACCEPT_TYPE\" -H \"Content-Type: $CONTENT_TYPE\" -d '$CURL_DATA'"
 
 sed -i '' "s/CALL/$CALL/g" $README
 
-clear
-
-REPO=$(echo "https://"$(echo $(git remote show origin) | egrep -o "(github\.com..*) URL") | sed "s/com:/com\//g")
-
-REPO=${REPO%????}
-REPO_NO_GIT=${REPO%????????}
 
 sed -i '' "s/REPO_NAME/$current_dir/g" $README
 
 source="This API use the following Github project : 
 [$REPO_NO_GIT]($REPO_NO_GIT)" > $SOURCE_CODE
-
-
-
 
 
 LICENSE_OPTIONS=(None "None" \
@@ -321,16 +306,12 @@ LICENSE=$(dialog \
 		15 80 15 \
 		"${LICENSE_OPTIONS[@]}" \
 		2>&1 1>&3)
-
 # close fd
 exec 3>&-
 
 
-
-
 # open fd
 exec 3>&1
-
 LICENSE_URL=$(dialog \
 		--ok-label "Submit" \
 		--backtitle "Marketplace API service" \
@@ -339,8 +320,6 @@ LICENSE_URL=$(dialog \
 		15 80 0 \
 		"LICENSE_URL:" 1 1	"$LICENSE_URL" 	1 22 80 0 \
 		2>&1 1>&3)
-
-
 # close fd
 exec 3>&-
 
@@ -349,8 +328,4 @@ The project is under $LICENSE License :
 [$LICENSE_URL]($LICENSE_URL)
 " > $LICENSE
 
-
 reset
-
-
-
