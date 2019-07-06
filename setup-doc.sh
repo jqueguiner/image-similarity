@@ -1,10 +1,17 @@
 dialog --title "Doc Generator" --clear --msgbox "Welcome to the Doc generator" 10 41
 
-cp README_TEMPLATE.md README.md
-cp swagger_template.json swagger.json
+mkdir -p doc
+
+README='doc/README.md'
+SWAGGER='doc/swagger.json'
+SOURCE_CODE='doc/source_code.md'
+LICENCE_CODE='doc/source_code.md'
+
+cp README_TEMPLATE.md $README
+cp swagger_template.json $SWAGGER
 
 current_dir="${PWD##*/}"
-sed -i '' "s/REPO_NAME/$current_dir/g" README.md
+
 
 TITLE_OF_THE_SERVICE=""
 SHORT_DESCRIPTION_OF_THE_SERVICE=""
@@ -42,10 +49,10 @@ API_RESTPOINT_OPERATION=$(echo "$VALUES" | sed -n 4p)
 NB_INPUT_FIELDS=$(echo "$VALUES" | sed -n 5p)
 NB_OUTPUT_FIELDS=$(echo "$VALUES" | sed -n 6p)
 
-sed -i '' "s/LONG_DESCRIPTION_OF_THE_SERVICE/$LONG_DESCRIPTION_OF_THE_SERVICE/g" swagger.json
-sed -i '' "s/SHORT_DESCRIPTION_OF_THE_SERVICE/$SHORT_DESCRIPTION_OF_THE_SERVICE/g" swagger.json
-sed -i '' "s/TITLE_OF_THE_SERVICE/$TITLE_OF_THE_SERVICE/g" swagger.json
-sed -i '' "s/API_RESTPOINT_OPERATION/$API_RESTPOINT_OPERATION/g" swagger.json
+sed -i '' "s/LONG_DESCRIPTION_OF_THE_SERVICE/$LONG_DESCRIPTION_OF_THE_SERVICE/g" $SWAGGER
+sed -i '' "s/SHORT_DESCRIPTION_OF_THE_SERVICE/$SHORT_DESCRIPTION_OF_THE_SERVICE/g" $SWAGGER
+sed -i '' "s/TITLE_OF_THE_SERVICE/$TITLE_OF_THE_SERVICE/g" $SWAGGER
+sed -i '' "s/API_RESTPOINT_OPERATION/$API_RESTPOINT_OPERATION/g" $SWAGGER
 
 
 
@@ -178,7 +185,7 @@ SCHEMA='"Body":{"type":"object","required":['$REQUIRED'],"properties":{'$PROPERT
 SCHEMA=$(printf "%q" $SCHEMA | sed 's/\//\\\//g')
 echo $SCHEMA
 
-sed -i '' "s/SCHEMA/$SCHEMA/g" swagger.json
+sed -i '' "s/SCHEMA/$SCHEMA/g" $SWAGGER
 
 
 RESPONSE_PROPERTIES=""
@@ -242,28 +249,8 @@ PROPERTIES=${PROPERTIES%?}
 
 RESPONSE_PROPERTIES=$(printf "%q" $RESPONSE_PROPERTIES | sed 's/\//\\\//g')
 
-sed -i '' "s/RESPONSE_PROPERTIES/$RESPONSE_PROPERTIES/g" swagger.json
+sed -i '' "s/RESPONSE_PROPERTIES/$RESPONSE_PROPERTIES/g" $SWAGGER
 
-
-
-HEADER_TYPE_OPTIONS=(application_json "application/json" \
-		application_xml "application/xml"
-		text_html "text/html (.xhtml, .html or .htm)" \
-		text_csv "text/csv (.csv)" \
-		text_plain "text/plain (.txt)" \
-		image "image/*" \
-		image_bmp "Image/bmp" \
-		image_gif "Image/gif" \
-		image_jpeg "Image/jpeg (.jpg or .jpeg)" \
-		image_png "image/png " \
-		audio_gpp "audio/3gpp (.3gp)" \
-		audio_midi "audio/midi (.mid or .midi)" \
-		audio_mpeg "audio/mpeg (mp3)" \
-		audio_mp4 "audio/mp4" \
-		audio_wave "audio/wav" \
-		audio_xwave "audio/x-wav" \
-		video_gpp "video/3gpp" \
-		video_mp4 "video/mp4")
 
 header_to_real(){
 	HEADER_TYPE=$1
@@ -297,9 +284,73 @@ echo $ACCEPT_TYPE
 echo $CURL_DATA
 CALL="curl -X POST \"http:\\/\\/MY_SUPER_API_IP:5000\\/$API_RESTPOINT_OPERATION\" -H \"accept: $ACCEPT_TYPE\" -H \"Content-Type: $CONTENT_TYPE\" -d '$CURL_DATA'"
 
-sed -i '' "s/CALL/$CALL/g" README.md
+sed -i '' "s/CALL/$CALL/g" $README
 
-#reset
+clear
+
+REPO=$(echo "https://"$(echo $(git remote show origin) | egrep -o "(github\.com..*) URL") | sed "s/com:/com\//g")
+
+REPO=${REPO%????}
+REPO_NO_GIT=${REPO%????????}
+
+sed -i '' "s/REPO_NAME/$current_dir/g" $README
+
+source="This API use the following Github project : 
+[$REPO_NO_GIT]($REPO_NO_GIT)" > $SOURCE_CODE
+
+
+
+
+
+LICENSE_OPTIONS=(None "None" \
+		APACHE2 "Apache License 2.0"
+		AGPL3 "GNU Affero General Public License v3.0" \
+		GPL3 "GNU General Public License v3.0" \
+		GPL2 "GNU General Public License v2.0" \
+		MIT "MIT License" \
+		BSD2 "BSD 2-Clause \"Simplified\" License" \
+		BSD3 "BSD 3-Clause \"New\" or \"Revised\" License")
+		
+
+exec 3>&1
+LICENSE=$(dialog \
+		--clear \
+		--backtitle "Marketplace API service" \
+		--title "Configuration of the license (page 1/2)" \
+		--menu "Choose aLicense:" \
+		15 80 15 \
+		"${LICENSE_OPTIONS[@]}" \
+		2>&1 1>&3)
+
+# close fd
+exec 3>&-
+
+
+
+
+# open fd
+exec 3>&1
+
+LICENSE_URL=$(dialog \
+		--ok-label "Submit" \
+		--backtitle "Marketplace API service" \
+		--title "Configuration of the license (page 2/2)" \
+		--form "URL of the License" \
+		15 80 0 \
+		"LICENSE_URL:" 1 1	"$LICENSE_URL" 	1 22 80 0 \
+		2>&1 1>&3)
+
+
+# close fd
+exec 3>&-
+
+license="
+The project is under $LICENSE License :
+[$LICENSE_URL]($LICENSE_URL)
+" > $LICENSE
+
+
+reset
 
 
 
