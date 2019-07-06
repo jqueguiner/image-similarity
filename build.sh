@@ -74,7 +74,7 @@ case $nvidia in
     nvidia-docker run -ipc=host -it -p $port:5000 $current_dir
     ;;
   *)
-	docker build -t $current_dir -f $dockerfile . 
+	docker run -it -p $port:5000 $current_dir
 	;;
 esac
 
