@@ -4,7 +4,7 @@ mkdir -p doc
 README='doc/README.md'
 SWAGGER='doc/swagger.json'
 SOURCE_CODE='doc/source_code.md'
-LICENCE_CODE='doc/source_code.md'
+LICENSE_CODE='doc/license_code.md'
 
 cp README_TEMPLATE.md $README
 cp swagger_template.json $SWAGGER
@@ -187,10 +187,10 @@ for (( i = 1; i <= $NB_INPUT_FIELDS; ++i )); do
 	FIELD_EXAMPLE=$(echo "$VALUES" | sed -n 3p)
 
 	case $FIELD_TYPE in
-	  [number_float]*) FIELD_FORMAT='"format":"float",'; FIELD_TYPE="number";;
-	  [number_double]*) FIELD_FORMAT='"format":"double",'; FIELD_TYPE="number";;
-	  [integer_int32]*) FIELD_FORMAT='"format":"int32",'; FIELD_TYPE="integer";;
-	  [integer_int64]*) FIELD_FORMAT='"format":"int64",'; FIELD_TYPE="integer";;
+	  number_float) FIELD_FORMAT='"format":"float",'; FIELD_TYPE="number";;
+	  number_double) FIELD_FORMAT='"format":"double",'; FIELD_TYPE="number";;
+	  integer_int32) FIELD_FORMAT='"format":"int32",'; FIELD_TYPE="integer";;
+	  integer_int64) FIELD_FORMAT='"format":"int64",'; FIELD_TYPE="integer";;
 	  *) FIELD_FORMAT="";;
 	esac
 
@@ -254,10 +254,10 @@ for (( i = 1; i <= $NB_OUTPUT_FIELDS; ++i )); do
 	FIELD_EXAMPLE=$(echo "$VALUES" | sed -n 3p)
 
 	case $FIELD_TYPE in
-	  [number_float]*) FIELD_FORMAT='"format":"float",'; FIELD_TYPE="number";;
-	  [number_double]*) FIELD_FORMAT='"format":"double",'; FIELD_TYPE="number";;
-	  [integer_int32]*) FIELD_FORMAT='"format":"int32",'; FIELD_TYPE="integer";;
-	  [integer_int64]*) FIELD_FORMAT='"format":"int64",'; FIELD_TYPE="integer";;
+	  number_float) FIELD_FORMAT='"format":"float",'; FIELD_TYPE="number";;
+	  number_double) FIELD_FORMAT='"format":"double",'; FIELD_TYPE="number";;
+	  integer_int32) FIELD_FORMAT='"format":"int32",'; FIELD_TYPE="integer";;
+	  integer_int64) FIELD_FORMAT='"format":"int64",'; FIELD_TYPE="integer";;
   	  *) FIELD_FORMAT="";;
 	esac
 
@@ -280,7 +280,8 @@ sed -i '' "s!CALL!$CALL!g" $README
 
 sed -i '' "s/REPO_NAME/$current_dir/g" $README
 
-source="This API use the following Github project : 
+echo "
+This API use the following Github project : 
 [$REPO_NO_GIT]($REPO_NO_GIT)" > $SOURCE_CODE
 
 
@@ -319,7 +320,7 @@ LICENSE_OPTIONS=(None "None" \
 		BSD3 "BSD 3-Clause \"New\" or \"Revised\" License")
 
 exec 3>&1
-LICENSE=$(dialog \
+LICENSE_VERSION=$(dialog \
 		--clear \
 		--backtitle "Marketplace API service" \
 		--title "Configuration of the license (page 1/2)" \
@@ -344,9 +345,9 @@ LICENSE_URL=$(dialog \
 # close fd
 exec 3>&-
 
-license="
-The project is under $LICENSE License :
+echo "
+The project is under $LICENSE_VERSION License :
 [$LICENSE_URL]($LICENSE_URL)
-" > $LICENSE
+" > $LICENSE_CODE
 
 reset
