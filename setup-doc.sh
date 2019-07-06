@@ -14,7 +14,7 @@ REPO=$(echo "https://"$(echo $(git remote show origin) | egrep -o "(github\.com.
 REPO=${REPO%????}
 REPO_NO_GIT=${REPO%????}
 
-dialog --title "Doc Generator - $current_dir" --clear --msgbox "Welcome to the Doc generator for $current_dir on repo $REPO_NO_GIT" 10 80
+dialog --backtitle "Marketplace API service"  --title "Doc Generator - $current_dir" --clear --msgbox "Welcome to the Doc generator for $current_dir on repo $REPO_NO_GIT" 10 80
 
 TITLE_OF_THE_SERVICE=""
 SHORT_DESCRIPTION_OF_THE_SERVICE=""
@@ -191,6 +191,7 @@ for (( i = 1; i <= $NB_INPUT_FIELDS; ++i )); do
 	  [number_double]*) FIELD_FORMAT='"format":"double",'; FIELD_TYPE="number";;
 	  [integer_int32]*) FIELD_FORMAT='"format":"int32",'; FIELD_TYPE="integer";;
 	  [integer_int64]*) FIELD_FORMAT='"format":"int64",'; FIELD_TYPE="integer";;
+	  *) FIELD_FORMAT="";;
 	esac
 
 	REQUIRED="$REQUIRED\"$FIELD_KEY\","
@@ -199,18 +200,15 @@ for (( i = 1; i <= $NB_INPUT_FIELDS; ++i )); do
 done
 
 #trim last comma
-REQUIRED=${REQUIRED%?}
-PROPERTIES=${PROPERTIES%?}
-CURL_DATA=${CURL_DATA%?}
-
-CURL_DATA=$(printf "%q" $CURL_DATA | sed 's/\//\\\//g')
+REQUIRED=$(echo $REQUIRED | sed 's/.$//')
+PROPERTIES=$(echo $PROPERTIES | sed 's/.$//')
+CURL_DATA=$(echo $CURL_DATA | sed 's/.$//')
 CURL_DATA="{$CURL_DATA}"
 
 
 SCHEMA='"Body":{"type":"object","required":['$REQUIRED'],"properties":{'$PROPERTIES'}'
-SCHEMA=$(printf "%q" $SCHEMA | sed 's/\//\\\//g')
 
-sed -i '' "s/SCHEMA/$SCHEMA/g" $SWAGGER
+sed -i '' "s!SCHEMA!$SCHEMA!g" $SWAGGER
 
 
 RESPONSE_PROPERTIES=""
@@ -260,31 +258,55 @@ for (( i = 1; i <= $NB_OUTPUT_FIELDS; ++i )); do
 	  [number_double]*) FIELD_FORMAT='"format":"double",'; FIELD_TYPE="number";;
 	  [integer_int32]*) FIELD_FORMAT='"format":"int32",'; FIELD_TYPE="integer";;
 	  [integer_int64]*) FIELD_FORMAT='"format":"int64",'; FIELD_TYPE="integer";;
+  	  *) FIELD_FORMAT="";;
 	esac
+
 
 	RESPONSE_PROPERTIES=$RESPONSE_PROPERTIES'"'$FIELD_KEY'":{"type":"'$FIELD_TYPE'",'$FIELD_FORMAT'"description":"'$FIELD_DESCRIPTION'","example":"'$FIELD_EXAMPLE'"},'	
 
 done
-
 #trim last comma
-RESPONSE_PROPERTIES=${RESPONSE_PROPERTIES%?}
+RESPONSE_PROPERTIES=$(echo $RESPONSE_PROPERTIES | sed 's/.$//')
 
-RESPONSE_PROPERTIES=$(printf "%q" $RESPONSE_PROPERTIES | sed 's/\//\\\//g')
-
-sed -i '' "s/RESPONSE_PROPERTIES/$RESPONSE_PROPERTIES/g" $SWAGGER
+sed -i '' "s!RESPONSE_PROPERTIES!$RESPONSE_PROPERTIES!g" $SWAGGER
 
 CONTENT_TYPE=$(header_to_real $CONTENT_TYPE)
 ACCEPT_TYPE=$(header_to_real $ACCEPT_TYPE)
 
 CALL="curl -X POST \"http:\\/\\/MY_SUPER_API_IP:5000\\/$API_RESTPOINT_OPERATION\" -H \"accept: $ACCEPT_TYPE\" -H \"Content-Type: $CONTENT_TYPE\" -d '$CURL_DATA'"
 
-sed -i '' "s/CALL/$CALL/g" $README
+sed -i '' "s!CALL!$CALL!g" $README
 
 
 sed -i '' "s/REPO_NAME/$current_dir/g" $README
 
 source="This API use the following Github project : 
 [$REPO_NO_GIT]($REPO_NO_GIT)" > $SOURCE_CODE
+
+
+
+
+dialog --backtitle "Marketplace API service" --title "Fetching license in $REPO_NO_GIT" --clear --msgbox "Next step will fetch the license in repo $REPO_NO_GIT it might take few seconds click ok to continue" 10 80
+
+
+LICENSE_URL=""
+if $(curl  -s --head "$REPO_NO_GIT/blob/master/LICENSE.txt" | grep "Status" | grep -q 200); then LICENSE_URL="$REPO_NO_GIT/blob/master/LICENSE.txt";fi
+if $(curl  -s --head "$REPO_NO_GIT/blob/master/LICENSE" | grep "Status" | grep -q 200); then LICENSE_URL="$REPO_NO_GIT/blob/master/LICENSE";fi
+	
+if [[ ! LICENSE_URL = "" ]]; then
+	RAW_LICENSE_URL=$(echo $LICENSE_URL | sed 's/github.com/raw.githubusercontent.com/g' | sed 's/\/blob//g')
+	tmp_license_file="/tmp/license-$(openssl rand -base64 4)"
+	
+	wget -q -O $tmp_license_file $RAW_LICENSE_URL
+	
+	dialog --clear --title "license : $LICENSE_URL" --backtitle "Marketplace API service" --textbox $tmp_license_file 60 100
+					
+					
+	
+
+	rm $tmp_license_file
+fi
+	
 
 
 LICENSE_OPTIONS=(None "None" \
@@ -295,14 +317,13 @@ LICENSE_OPTIONS=(None "None" \
 		MIT "MIT License" \
 		BSD2 "BSD 2-Clause \"Simplified\" License" \
 		BSD3 "BSD 3-Clause \"New\" or \"Revised\" License")
-		
 
 exec 3>&1
 LICENSE=$(dialog \
 		--clear \
 		--backtitle "Marketplace API service" \
 		--title "Configuration of the license (page 1/2)" \
-		--menu "Choose aLicense:" \
+		--menu "Choose a License:" \
 		15 80 15 \
 		"${LICENSE_OPTIONS[@]}" \
 		2>&1 1>&3)
