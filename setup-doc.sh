@@ -279,6 +279,7 @@ sed -i '' "s!CALL!$CALL!g" $README
 
 
 sed -i '' "s/REPO_NAME/$current_dir/g" $README
+sed -i '' "s/REPO/$REPO/g" $README
 
 echo "
 This API use the following Github project : 
