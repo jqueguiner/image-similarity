@@ -11,7 +11,6 @@ main(){
 	setup_header_type "Accept"
 
 	build_input_fields
-	clear
 	build_output_fields
 	format_json_file SWAGGER
 
