@@ -57,10 +57,10 @@ def detect():
         sift_sim = sift_sim(input_a_path, input_b_path)
         emd = earth_movers_distance(input_a_path, input_b_path)
         results.append({
-        	"structural_similarity": structural_sim, 
-        	"pixel_similarity": pixel_sim, 
-        	"SIFT_similarity": sift_sim, 
-        	"EarthMover_Distance": emd
+        	"structural_similarity": round(structural_sim, 4),
+        	"pixel_similarity": round(pixel_sim, 4),
+        	"SIFT_similarity": round(sift_sim, 4),
+        	"EarthMover_Distance": round(emd, 4)
         	})
         
         return json.dumps(results), 200
