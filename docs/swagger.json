@@ -80,8 +80,7 @@
           "type":"string",
           "description":"url of the image B to be analyzed",
           "example":"https://i.ibb.co/R792dvs/b.jpg"
-          },
-
+          }
         }
       },
       "Response":{
