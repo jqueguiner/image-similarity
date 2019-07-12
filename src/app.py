@@ -46,17 +46,16 @@ def detect():
     try:
         url_a = request.json["url_a"]
         url_b = request.json["url_b"]
-        sigma=50
 
         download(url_a, input_a_path)
         download(url_b, input_b_path)
        
         results = []
 
-        structural_sim = structural_sim(img_a, img_b)
-        pixel_sim = pixel_sim(img_a, img_b)
-        sift_sim = sift_sim(img_a, img_b)
-        emd = earth_movers_distance(img_a, img_b)
+        structural_sim = structural_sim(input_a_path, input_b_path)
+        pixel_sim = pixel_sim(input_a_path, input_b_path)
+        sift_sim = sift_sim(input_a_path, input_b_path)
+        emd = earth_movers_distance(input_a_path, input_b_path)
         results.append({
         	"structural_similarity": structural_sim, 
         	"pixel_similarity": pixel_sim, 
