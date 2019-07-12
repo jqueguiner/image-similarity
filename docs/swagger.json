@@ -1,0 +1,114 @@
+{
+  "openapi":"3.0.1",
+  "info":{
+    "description":"This API will detect the similarity between 2 images",
+    "title":"Image similarity",
+    "version":"1.0.0"
+  },
+  "tags":[
+    {
+      "name":"detect",
+      "description":"This API will detect the similarity between 2 images"
+    }
+  ],
+  "paths":{
+    "/detect":{
+      "post":{
+        "security":[
+          {
+            "apikey":[
+
+            ]
+          }
+        ],
+        "tags":[
+          "detect"
+        ],
+        "summary":"detect the similarity between 2 images",
+        "description":"This API will detect the similarity between 2 images",
+        "operationId":"detect",
+        "responses":{
+          "401":{
+            "description":"Unauthorized"
+          },
+          "200":{
+            "content":{
+              "application/json":{
+                "schema":{
+                  "type":"array",
+                  "items":{
+                    "$ref":"#/components/schemas/Response"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody":{
+          "description":"detect the similarity between 2 images",
+          "required":true,
+          "content":{
+            "application/json":{
+              "schema":{
+                "$ref":"#/components/schemas/Body"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components":{
+    "securitySchemes":{
+      "apikey":{
+        "type":"apiKey",
+        "name":"X-OVH-Api-Key",
+        "in":"header"
+      }
+    },
+    "schemas":{
+      "Body":{
+        "type":"object",
+        "required":["url_a", "url_b"],
+        "properties":{
+          "url_a":{
+          "type":"string",
+          "description":"url of the image A to be analyzed",
+          "example":"https://i.ibb.co/JqLZ4KZ/a.jpg"
+          },
+          "url_b":{
+          "type":"string",
+          "description":"url of the image B to be analyzed",
+          "example":"https://i.ibb.co/R792dvs/b.jpg"
+          },
+
+        }
+      },
+      "Response":{
+        "type":"object",
+        "properties":{
+          "structural_similarity":{
+            "type":"string",
+            "description":"SSIM is used for measuring the similarity between two images",
+            "example":"0.96"
+          },
+          "pixel_similarity":{
+            "type":"string",
+            "description":"pixel similarities between images",
+            "example":""
+          },
+          "SIFT_similarity":{
+            "type":"string",
+            "description":"Scale Invariant Feature Transform (SIFT) feature analysis",
+            "example":""
+          },
+          "EarthMover_Distance":{
+            "type":"string",
+            "description":"Earth Mover's distance (EMD) also known as Wasserstein metric",
+            "example":""
+          }
+        }
+      }
+    }
+  }
+}
