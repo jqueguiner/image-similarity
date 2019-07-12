@@ -22,9 +22,7 @@ from app_utils import create_directory
 from app_utils import get_model_bin
 from app_utils import get_multi_model_bin
 
-import face_recognition
-import cv2
-from skimage import io
+import similarity 
 
 
 try:  # Python 3.5+
@@ -39,43 +37,35 @@ except ImportError:
 app = Flask(__name__)
 
 
-@app.route("/process", methods=["POST"])
-def process():
+@app.route("/detect", methods=["POST"])
+def detect():
 
-    input_path = generate_random_filename(upload_directory,"jpg")
-    output_path = generate_random_filename(upload_directory,"jpg")
+    input_a_path = generate_random_filename(upload_directory,"jpg")
+    input_b_path = generate_random_filename(upload_directory,"jpg")
 
     try:
-        url = request.json["url"]
+        url_a = request.json["url_a"]
+        url_b = request.json["url_b"]
         sigma=50
 
-        download(url, input_path)
+        download(url_a, input_a_path)
+        download(url_b, input_b_path)
        
         results = []
 
-        image = face_recognition.load_image_file(input_path)
-
-        locations = face_recognition.face_locations(image)
-
-        image = io.imread(input_path)
-
-        for location in locations:
-            startY = location[0]
-            endY = location[2]
-            startX = location[1]
-            endX = location[3]
-
-            image = blur(image, startX, endX, startY, endY, sigma=sigma)
+        structural_sim = structural_sim(img_a, img_b)
+        pixel_sim = pixel_sim(img_a, img_b)
+        sift_sim = sift_sim(img_a, img_b)
+        emd = earth_movers_distance(img_a, img_b)
+        results.append({
+        	"structural_similarity": structural_sim, 
+        	"pixel_similarity": pixel_sim, 
+        	"SIFT_similarity": sift_sim, 
+        	"EarthMover_Distance": emd
+        	})
         
+        return json.dumps(results), 200
 
-        io.imsave(output_path, image)
-        
-        callback = send_file(output_path, mimetype='image/jpeg')
-
-        return callback, 200
-
-        #callback for detection
-        #json.dumps(results), 200
 
     except:
         traceback.print_exc()
@@ -83,8 +73,8 @@ def process():
 
     finally:
         clean_all([
-            input_path,
-            output_path
+            input_a_path,
+            input_b_path
             ])
 
 if __name__ == '__main__':
