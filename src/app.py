@@ -20,10 +20,11 @@ from app_utils import clean_me
 from app_utils import clean_all
 from app_utils import create_directory
 from app_utils import get_model_bin
-from app_utils import get_multi_model_bin
 
-import similarity 
-
+from similarity import structural_sim 
+from similarity import pixel_sim
+from similarity import sift_sim
+from similarity import earth_movers_distance
 
 try:  # Python 3.5+
     from http import HTTPStatus
@@ -52,15 +53,15 @@ def detect():
        
         results = []
 
-        structural_sim = structural_sim(input_a_path, input_b_path)
-        pixel_sim = pixel_sim(input_a_path, input_b_path)
-        sift_sim = sift_sim(input_a_path, input_b_path)
+        ssim = structural_sim(input_a_path, input_b_path)
+        psim = pixel_sim(input_a_path, input_b_path)
+        ssim = sift_sim(input_a_path, input_b_path)
         emd = earth_movers_distance(input_a_path, input_b_path)
         results.append({
-        	"structural_similarity": round(structural_sim, 4),
-        	"pixel_similarity": round(pixel_sim, 4),
-        	"SIFT_similarity": round(sift_sim, 4),
-        	"EarthMover_Distance": round(emd, 4)
+        	"structural_similarity": ssim,
+        	"pixel_similarity": psim,
+        	"SIFT_similarity": ssim,
+        	"EarthMover_Distance": emd
         	})
         
         return json.dumps(results), 200

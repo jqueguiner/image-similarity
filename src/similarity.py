@@ -2,7 +2,7 @@ import warnings
 from skimage.measure import compare_ssim
 from skimage.transform import resize
 from scipy.stats import wasserstein_distance
-from imageio import imread
+from scipy.ndimage import imread
 import numpy as np
 import cv2
 

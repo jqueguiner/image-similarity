@@ -1,7 +1,6 @@
 import os
 import requests
 import random
-import _thread as thread
 from uuid import uuid4
 
 import numpy as np
@@ -57,9 +56,4 @@ def get_model_bin(url, output_path):
 
     return output_path
 
-
-#model_list = [(url, output_path), (url, output_path)]
-def get_multi_model_bin(model_list):
-    for m in model_list:
-        thread.start_new_thread(get_model_bin, m)
 
