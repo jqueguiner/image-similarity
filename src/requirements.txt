@@ -1,3 +1,6 @@
+requests
+flask
 opencv-python
 scipy
 pillow
+scikit-image

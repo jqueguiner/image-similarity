@@ -4,10 +4,11 @@ ADD src /src
 
 WORKDIR /src
 
-RUN pip3 install -r requirements.txt
+RUN apt-get update -y && apt-get install python-pip -y
+RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
-ENTRYPOINT ["python3"]
+ENTRYPOINT ["python"]
 
 CMD ["app.py"]

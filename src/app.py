@@ -55,13 +55,14 @@ def detect():
 
         ssim = structural_sim(input_a_path, input_b_path)
         psim = pixel_sim(input_a_path, input_b_path)
-        ssim = sift_sim(input_a_path, input_b_path)
+        sift = sift_sim(input_a_path, input_b_path)
         emd = earth_movers_distance(input_a_path, input_b_path)
+
         results.append({
-        	"structural_similarity": ssim,
-        	"pixel_similarity": psim,
-        	"SIFT_similarity": ssim,
-        	"EarthMover_Distance": emd
+        	"structural_similarity": "%.4f" % ssim,
+        	"pixel_similarity": "%.4f" % psim,
+        	"SIFT_similarity": "%.4f" % sift,
+        	"EarthMover_Distance": "%.4f" % emd,
         	})
         
         return json.dumps(results), 200
