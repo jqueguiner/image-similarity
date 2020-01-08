@@ -53,10 +53,11 @@ def detect():
             file_a = request.files['file_a']
             if allowed_file(file_a.filename):
                 file_a.save(input_a_path)
+                
         if 'file_b' in request.files:
             file_b = request.files['file_b']
             if allowed_file(file_b.filename):
-                file_a.save(input_b_path)
+                file_b.save(input_b_path)
             
         else:
             url_a = request.json["url_a"]
