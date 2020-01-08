@@ -38,6 +38,10 @@ except ImportError:
 app = Flask(__name__)
 
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route("/detect", methods=["POST"])
 def detect():
 
@@ -45,11 +49,21 @@ def detect():
     input_b_path = generate_random_filename(upload_directory,"jpg")
 
     try:
-        url_a = request.json["url_a"]
-        url_b = request.json["url_b"]
+        if 'file_a' in request.files:
+            file_a = request.files['file_a']
+            if allowed_file(file_a.filename):
+                file_a.save(input_a_path)
+        if 'file_b' in request.files:
+            file_b = request.files['file_b']
+            if allowed_file(file_b.filename):
+                file_a.save(input_b_path)
+            
+        else:
+            url_a = request.json["url_a"]
+            url_b = request.json["url_b"]
 
-        download(url_a, input_a_path)
-        download(url_b, input_b_path)
+            download(url_a, input_a_path)
+            download(url_b, input_b_path)
        
         results = []
 
@@ -67,7 +81,6 @@ def detect():
         
         return json.dumps(results), 200
 
-
     except:
         traceback.print_exc()
         return {'message': 'input error'}, 400
@@ -80,6 +93,8 @@ def detect():
 
 if __name__ == '__main__':
     global upload_directory
+    global ALLOWED_EXTENSIONS
+    ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
     upload_directory = '/src/upload/'
     create_directory(upload_directory)
